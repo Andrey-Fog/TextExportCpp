@@ -1,0 +1,249 @@
+// Основные данные в файле Points.bin. В файл подряд последовательно пишутся точки регистрации данных ONE_POINT.
+typedef __packed struct _ONE_POINT
+	{
+	// Усилие.
+	int32_t Force;
+	// Перемещение штока.
+	int32_t Moving;
+	// Деформация. 
+	int32_t Deformation;
+	} ONE_POINT;
+// В этом массиве ONE_POINT есть точки до старта испытания, точки испытания и точки после завершения испытания.
+// Участок испытания, параметры испытания, тип контролируемого параметра, причина завершения и др. определены
+// в структуре TEST_INFO (см. ниже). Эта структура сохраняется в файле "Info.bin".
+// Далее я привожу выдержку из моего проекта (лишнее постарался выкинуть максимально), где определена структура
+// TEST_INFO:
+// Максимальное колличество точек задания произвольной формы сигнала.
+#define MAX_NUM_POINT_FREE_FORM			40
+typedef quint32 uint32_t;
+typedef qint32 int32_t;
+typedef quint16 uint16_t;
+typedef qint16 int16_t;
+// Тип данных - перечисление всех возможных режимов работы.
+typedef enum _STATE_ENUM:unsigned char
+	{
+	STATE_UNKNOWN=0,					// Нет данных.
+	STOP_FAIL=1,						// Аварийный останов.
+	STOP=2,								// Останов.
+	MOVE_UP=10,							// Свободное перемещение траверсы вверх.
+	MOVE_DN=11,							// Свободное перемещение траверсы вниз.
+	MODE_ZERO_FORCE=20,					// Режим разгрузки образца.
+	MODE_SET_MATERIAL=21,				// Режим установки образца.
+	PRE_TEST_CTRL=24,					// Этап поддержания нагрузки перед тестом.
+	AFTER_TEST_CTRL=25,					// Этап поддержания нагрузки после теста.
+	TEST_SUSPENDED=26,					// Тест приостановился в ожидании реакции пользователя.
+	TEST_TENSION=33,					// Запущен тест "Растяжение".
+	TEST_COMPRESSION=35,				// Запущен тест "Сжатие".
+	TEST_CONTROL=36,					// Запущен тест "Поддержание заданного параметра".
+	TEST_CYCLING_SINE=37,				// Запущен тест "Циклирование - синусоида".
+	TEST_CYCLING_MEANDER=38,			// Запущен тест "Циклирование - меандр".
+	TEST_CYCLING_TRIANGLE=39,			// Запущен тест "Циклирование - треугольник".
+	TEST_CYCLING_FREE_FORM=40,			// Запущен тест "Циклирование - произвольная форма"	.
+	TEST_STOP_FAIL=64,					// Тест остановлен кнопкой "Аварийный останов".
+	TEST_STOP_FAIL_LIMIT_TOP=65,		// Тест остановлен по аварии конечного выключателя КВВ.
+	TEST_STOP_FAIL_LIMIT_BOTTOM=66,		// Тест остановлен по аварии конечного выключателя КВН.
+	TEST_STOP_DRIVE_NO_READY=67,		// Тест остановлен по проподанию готовности привода.
+	TEST_STOP_FAIL_FORCE=68,			// Тест остановлен по перегрузке датчика силы.
+	TEST_STOP_FAIL_ADC=69,				// Тест остановлен по обрыву связи с блоком АЦП.
+	TEST_STOP_LIMIT_FORCE_MAX=70,		// Тест остановлен по превышению усилия в плюс.
+	TEST_STOP_LIMIT_FORCE_MIN=71,		// Тест остановлен по превышению усилия в минус.
+	TEST_STOP_LIMIT_MOVING_MAX=72,		// Тест остановлен по превышению перемещения в плюс.
+	TEST_STOP_LIMIT_MOVING_MIN=73,		// Тест остановлен по превышению перемещения в минус.
+	TEST_STOP_LIMIT_DEFORMATION_MAX=74,	// Тест остановлен по превышению деформации в плюс.
+	TEST_STOP_LIMIT_DEFORMATION_MIN=75,	// Тест остановлен по превышению деформации в минус.
+	TEST_STOP_LIMIT_TOP=76,				// Тест остановлен по конечному выключателю КВВ.
+	TEST_STOP_LIMIT_BOTTOM=77,			// Тест остановлен по конечному выключателю КВН.
+	TEST_STOP_DEFECT=78,				// Тест остановлен по обнаружению трещины на образце.
+	TEST_STOP_CRACK=79,					// Разрыв образца.
+	TEST_STOP_ERR_UNABLE=80,			// Не возможно выполнить тест (ошибка параметров, люфты).
+	TEST_STOP_OK=81,					// Тест отработал заданные циклы (или время).
+	} STATE_ENUM;
+// Тип данных - перечисление типа контролируемого параметра.
+typedef enum _TYPE_CONTROL_ENUM:unsigned char
+	{
+	CONTROL_FORCE=0,					// Контролируемая величина - усилие
+	CONTROL_MOVING=1,					// Контролируемая величина - перемещение траверсы
+	CONTROL_DEFORMATION=2				// Контролируемая величина - деформация
+	} TYPE_CONTROL_ENUM;
+#pragma pack (push, 1)
+// Параметры испытания.
+typedef union _TEST_SETTINGS
+	{
+	// Параметры испытания "Растяжение".
+	struct _TestTensionSettings
+		{
+		// Основные параметры.
+		struct _General
+			{
+			// Предварительная скорость траверсы в 0.001 мм/мин.
+			int32_t PrevSpeed;
+			// Значение усилия, ниже которого скорость траверсы равна PrevSpeed.
+			int32_t ForcePrevSpeed;
+			// Рабочая скорость траверсы в 0.001 мм/мин.
+			int32_t WorkSpeed;
+			// Переменная равна 1, когда требуется останов при достижении усилия ForcePrevSpeed.
+			unsigned char StopFprev;
+			// Время теста в секундах.
+			uint16_t TimeVal;
+			} General;
+		// Геометрические параметры образца.
+		struct _Geometry
+			{
+			// 1 - плоский образец.
+			unsigned char MaterialIsPlane:1;
+			float l0;					// l0=База экстензометра с точностью 0.1 мм (xxx.x).
+			float a0;					// a0=Начальная толщина образца с точностью 0.01 мм (xxx.xx).
+			float b0;					// b0=Начальная ширина образца с точностью 0.01 мм (xxx.xx).
+			float d0;					// d0=Начальный диаметр образца с точностью 0.01 мм (xxx.xx).
+			float F0;					// F0=Начальная площадь поперечного сечения образца с точностью 0.01 мм (xxx.xx).
+			} Geometry;
+		// Параметры обнаружения разрыва образца.
+		struct _CrackCtrl
+			{
+			// Обнаружение разрыва производится при усилиях, превышающих:
+			int32_t ForceCheckCrack;
+			// Определение разрыва по спаду усилия на PercentDecForce% за время TimeMsDecForce ms.
+			unsigned char PercentDecForce;
+			uint16_t TimeMsDecForce;
+			// Определение разрыа при усилии MinPercentForce % от Pmax.
+			unsigned char MinPercentForce;
+			// Флаги активности условий обнаружения разрушения:
+			// Определение разрыва по спаду усилия на PercentDecForce% за время TimeMsDecForce ms.
+			unsigned char CheckPercentDecForce:1;
+			// Определение разрыва при усилии MinPercentForce % от Pmax.
+			unsigned char CheckMinPercentForce:1;
+			} CrackCtrl;
+		// Номер ГОСТ. Если это поле равно 0, нет стандарта испытания.
+		uint16_t StandartNum;
+		// Набор параметров для испытания растяжения по ГОСТ1497.
+		struct _Settings1497
+			{
+			// 1 - используется экстензометр.
+			unsigned char TensometerEn;
+			// Определение касательной.
+			struct _Tangent
+				{
+				unsigned char Auto;			// 1 - определение касательной методом наименьших отклонений.
+				unsigned char Point0;		// Определение касательной по 2-м точкам, точка 0.
+				unsigned char Point1;		// Определение касательной по 2-м точкам, точка 1.
+				} Tangent;
+			// Процесс нагружения.
+			struct _Ctrl
+				{
+				// Переменная определяет контролируемый параметр в процессе нагружения:
+				// 0 - скорость перемещения активного захвата, мм/мин;
+				// 1 - cкорость нагружения, Н/(мм2*с);
+				// 2 - cкорость относительной деформации, 1/с.
+				unsigned char Mode;
+				float SetSpeedForce;		// Заданное значение для ModeCtrl=1 - нагружения, Н/(мм2*с).
+				float SetSpeedDeformation;	// Заданное значение для ModeCtrl=2 - деформации, 1/с
+				// Максимальная скорость перемещения активного захвата, мм/мин.
+				int32_t MaxSpeedMoving;
+				} Ctrl;
+			// Текучесть.
+			struct _FlowCtrl
+				{
+				// Поиск предела пропорциональности производится при усилиях, превышающих:
+				int32_t ForceFindTangent;
+				// Для поиска предела пропорциональности используется временной интервал, ms:
+				uint16_t TimeMsFindLastTangent;
+				// Параметры, определяющие автоматический останов для снятия экстензометра:
+				// Останов при достижении деформации, мм:
+				int32_t StopMaxDeformation;
+				// Останов при деформации StopDeformationAfterLimitProportional мм после точки предела
+				// пропорциональности:
+				int32_t StopDeformationAfterLimitProportional;
+				// Останов через StopTimeMsAfterLimitProportional секунд после точки предела пропорциональности:
+				uint16_t StopTimeSAfterLimitProportional;
+				// Флаги активности этих условий:
+				unsigned char CheckStopMaxDeformation:1;
+				unsigned char CheckStopDeformationAfterLimitProportional:1;
+				unsigned char CheckStopTimeSAfterLimitProportional:1;
+				} FlowCtrl;
+			} Settings1497;
+		} TestTensionSettings;
+	// Параметры испытания "Сжатие".
+	struct _TestCompressionSettings
+		{
+		// Основные параметры.
+		struct _General
+			{
+			// Предварительная скорость траверсы в 0.001 мм/мин.
+			int32_t PrevSpeed;
+			// Значение усилия, ниже которого скорость траверсы равна PrevSpeed.
+			int32_t ForcePrevSpeed;
+			// Рабочая скорость траверсы в 0.001 мм/мин.
+			int32_t WorkSpeed;
+			// Переменная равна 1, когда требуется останов при достижении усилия ForcePrevSpeed.
+			unsigned char StopFprev;
+			// Время теста в секундах.
+			uint16_t TimeVal;
+			} General;
+		} TestCompressionSettings;
+	// Параметры испытания "Поддержание заданного параметра".
+	struct _TestControlSettings
+		{
+		// Тип контролируемого параметра.
+		TYPE_CONTROL_ENUM TypeControl;
+		// Заданное значение.
+		int32_t CtrlVal;
+		// Время поддержания в секундах.
+		uint32_t TimeVal;
+		} TestControlSettings;
+	// Параметры испытаний "Циклирование - синусоида", "Циклирование - меандр" и "Циклирование
+	// - треугольник".
+	struct _TestCyclingSettings
+		{
+		// Тип контролируемого параметра.
+		TYPE_CONTROL_ENUM TypeControl;
+		// Среднее значение.
+		int32_t MeanVal;
+		// Переменное значение.
+		uint32_t AltVal;
+		// База (заданное колличество циклов).
+		uint32_t NumberCycles;
+		// Период сигнала в мс.
+		uint32_t Period;
+		} TestCyclingSettings;
+	// Параметры испытания  "Циклирование - произвольная форма".
+	struct _TestFreeFormSettings
+		{
+		// Тип контролируемого параметра.
+		TYPE_CONTROL_ENUM TypeControl;
+		// Колличество точек формы сигнала (1...MAX_NUM_POINT_FREE_FORM)
+		unsigned char NumPointsFreeForm;
+		// Заданное значение.
+		int32_t Val[MAX_NUM_POINT_FREE_FORM];
+		// Время выхода в точку, мс
+		uint16_t TimeGoTo[MAX_NUM_POINT_FREE_FORM];
+		// Время поддержания точки, мс
+		uint16_t TimeKeep[MAX_NUM_POINT_FREE_FORM];
+		// База (заданное колличество циклов).
+		uint32_t NumberCycles;
+		} TestFreeFormSettings;
+	} TEST_SETTINGS;
+// Эта структура данных содержит параметры испытания, результаты испытания, локализацию испытания
+// в файле точек испытания. Эта структура сохраняется в файле "Info.bin".
+typedef struct _TEST_INFO
+	{
+	// Тип теста.
+	STATE_ENUM TypeTest;
+	// Параметры испытания.
+	TEST_SETTINGS TestSettings;
+	// Номер первой точки, с которой начинается испытание (первая точка циклирования или
+	// первая точка испытания поддержания параметра или первая точка растяжения (сжатия).
+	int64_t FirstPointTest;
+	// Номер поcледней точки испытания. Равенство 0 - косвенный признак неоконченного или неначатого испытания.
+	int64_t LastPointTest;
+	// Результат испытания. Когда результатов испытания нет (испытание еще не закончилось), поле
+	// ResultTest=STATE_UNKNOWN.
+	STATE_ENUM ResultTest;
+	// Это поле принимает значение !=0, когда структура TEST_INFO имеет достоверные (принятые от
+	// регулятора) данные.
+	unsigned char TrueTestSettings;
+	// Резервное поле на развитие структуры TEST_INFO
+	unsigned char ReservPlane[63];
+	// Я думаю это поле Вам проверять не надо. Если хотите, алгоритм пришлю (он не из стандартных).
+	uint32_t Crc32;
+	} TEST_INFO;
+// Для справки: использую C++, Qt.
