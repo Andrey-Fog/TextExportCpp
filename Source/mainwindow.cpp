@@ -24,20 +24,35 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_btnOK_clicked()
 {
-    ui->txtOut->setText(QString::number(ui->txtIn->text().toInt()*2));
+
 }
 
-HEADER_EXP_FILE getHeader (const QString ufile)
+QDataStream& operator>>(QDataStream& stream, HEADER_EXP_FILE& header)
+{
+    stream.device()->reset();
+    stream.setByteOrder(QDataStream::LittleEndian);
+    stream >> header.ExpPrescaler;
+    stream >> header.FormatExportPoint.ValI32;
+    stream >> header.TypeTest;
+    return stream;
+}
+
+HEADER_EXP_FILE getHeader (QFile& ufile)
 {
     HEADER_EXP_FILE FileHeader;
+    ufile.open(QIODeviceBase::ReadOnly);
+    QDataStream in(&ufile);    // read the data serialized from the file
+    in >> FileHeader;
 
     return FileHeader;
 }
 
 void MainWindow::on_actionOpen_triggered()
 {
-    QString sFile(QFileDialog::getOpenFileName(0, "Open", "", "*.bin"));
+    QFile sFile(QFileDialog::getOpenFileName(0, "Open", "", "*.bin"));
     HEADER_EXP_FILE FileHead;
     FileHead = getHeader(sFile);
+    ui->txtOut->setText(QString::number(FileHead.ExpPrescaler));
+    ui->txtIn->setText(QString::number(FileHead.TypeTest));
 }
 
