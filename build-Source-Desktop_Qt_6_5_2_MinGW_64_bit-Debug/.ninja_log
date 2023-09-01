@@ -1,0 +1,9 @@
+# ninja log v5
+1	746	7152605050383105	TextExportCpp_autogen/timestamp	528426789f124c0a
+1	746	7152605050383105	TextExportCpp_autogen/mocs_compilation.cpp	528426789f124c0a
+1	746	7152605050383105	C:/Users/FoG/Documents/GitHub/TextExportCpp/build-Source-Desktop_Qt_6_5_2_MinGW_64_bit-Debug/TextExportCpp_autogen/timestamp	528426789f124c0a
+1	746	7152605050383105	C:/Users/FoG/Documents/GitHub/TextExportCpp/build-Source-Desktop_Qt_6_5_2_MinGW_64_bit-Debug/TextExportCpp_autogen/mocs_compilation.cpp	528426789f124c0a
+746	3079	7152605075168352	CMakeFiles/TextExportCpp.dir/TextExportCpp_autogen/mocs_compilation.cpp.obj	2a1beca32b4bf77a
+749	3103	7152605075477909	CMakeFiles/TextExportCpp.dir/main.cpp.obj	5316cbd5a0b6ef89
+752	3305	7152605077459481	CMakeFiles/TextExportCpp.dir/mainwindow.cpp.obj	38b1df240c19ca2b
+3305	3532	7152605079767133	TextExportCpp.exe	d01c3001675ba13e
