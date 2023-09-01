@@ -114,5 +114,7 @@ typedef struct _HEADER_EXP_FILE
     } TestSettings;
 } HEADER_EXP_FILE;
 #pragma pack ( pop)
+/////////////////////////////////////////////////////////////////
 
 #endif // STRUCTURES_H
+
