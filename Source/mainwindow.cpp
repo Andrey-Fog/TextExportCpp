@@ -3,7 +3,9 @@
 #include <QFileDialog>
 #include <QDataStream>
 #include <QFile>
-
+#include <iostream>
+#include <fstream>
+#include <string>
 using namespace std;
 // Максимальное колличество точек задания произвольной формы сигнала.
 #define MAX_NUM_POINT_FREE_FORM			40
@@ -141,14 +143,17 @@ void MainWindow::on_btnOK_clicked()
     ui->txtOut->setText(QString::number(ui->txtIn->text().toInt()*2));
 }
 
+HEADER_EXP_FILE getHeader (const QString ufile)
+{
+    HEADER_EXP_FILE FileHeader;
+
+    return FileHeader;
+}
 
 void MainWindow::on_actionOpen_triggered()
 {
-    QFile sFileName(QFileDialog::getOpenFileName(0, "Open", "", "*.bin"));
-
+    QString sFile(QFileDialog::getOpenFileName(0, "Open", "", "*.bin"));
     HEADER_EXP_FILE FileHead;
-    QFile::read(FileHead,sizeof (FileHead));
-
-
+    FileHead = getHeader(sFile);
 }
 
